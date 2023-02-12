@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/kkr2/spots/internal/config"
 	"github.com/kkr2/spots/pkg/logger"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,17 +22,18 @@ const (
 
 // Server struct
 type Server struct {
-	echo   *echo.Echo
-	cfg    *config.Config
-	db     *sqlx.DB
-	logger logger.Logger
+	echo    *echo.Echo
+	cfg     *config.Config
+	db      *sqlx.DB
+	slogger logger.Logger
 }
 
 // NewServer New Server constructor
 func NewServer(cfg *config.Config, db *sqlx.DB, logger logger.Logger) *Server {
-	return &Server{echo: echo.New(), cfg: cfg, db: db, logger: logger}
+	return &Server{echo: echo.New(), cfg: cfg, db: db, slogger: logger}
 }
 
+// Run command starts the server
 func (s *Server) Run() error {
 
 	server := &http.Server{
@@ -42,9 +44,9 @@ func (s *Server) Run() error {
 	}
 
 	go func() {
-		s.logger.Infof("Server is listening on PORT: %s", s.cfg.Server.Port)
+		s.slogger.Infof("Server is listening on PORT: %s", s.cfg.Server.Port)
 		if err := s.echo.StartServer(server); err != nil {
-			s.logger.Fatalf("Error starting Server: ", err)
+			s.slogger.Fatalf("Error starting Server: ", err)
 		}
 	}()
 
@@ -60,6 +62,7 @@ func (s *Server) Run() error {
 	ctx, shutdown := context.WithTimeout(context.Background(), ctxTimeout*time.Second)
 	defer shutdown()
 
-	s.logger.Info("Server Exited Properly")
+	s.slogger.Info("server exited properly")
 	return s.echo.Server.Shutdown(ctx)
+
 }

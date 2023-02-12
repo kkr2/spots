@@ -10,25 +10,26 @@ import (
 	"github.com/kkr2/spots/pkg/utils"
 	"github.com/labstack/echo/v4"
 )
-
+// SpotsHandlers is an http interface 
 type SpotsHandlers interface {
 	GetSpots() echo.HandlerFunc
 }
 
+// spotsHandlers is the concrete implementation of spots handler 
 type spotsHandlers struct {
 	cfg         *config.Config
 	spotService service.SpotService
 	logger      logger.Logger
 }
 
-// NewNewsHandlers News handlers constructor
+// NewSpotsHandlers News handlers constructor
 func NewSpotsHandlers(cfg *config.Config, spotService service.SpotService, logger logger.Logger) SpotsHandlers {
 	return &spotsHandlers{cfg: cfg, spotService: spotService, logger: logger}
 }
 
+// GetSpots is a handler function using GetSpotsInRangeOfCoordinate use-case
 func (h spotsHandlers) GetSpots() echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		ctx := utils.GetRequestCtx(c)
 		pq, err := utils.GetPaginationFromCtx(c)
 		if err != nil {
@@ -40,7 +41,7 @@ func (h spotsHandlers) GetSpots() echo.HandlerFunc {
 			utils.LogResponseError(c, h.logger, err)
 			return c.JSON(httpErrors.ErrorResponse(err))
 		}
-		spotList, err := h.spotService.GetSpotsInRangeOfCoordinate(ctx,coordinate,pq)
+		spotList, err := h.spotService.GetSpotsInRangeOfCoordinate(ctx, coordinate, pq)
 		if err != nil {
 			utils.LogResponseError(c, h.logger, err)
 			return c.JSON(httpErrors.ErrorResponse(err))

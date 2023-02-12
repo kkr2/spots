@@ -20,7 +20,7 @@ services:
 
   postgesql:
     image: postgis/postgis:14-3.3-alpine
-    container_name: postgis
+    container_name: postgres
     ports:
       - "5432:5432"
     restart: always

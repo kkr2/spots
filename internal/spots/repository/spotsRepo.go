@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// SpotRepository is a repository interface
 type SpotRepository interface {
 	GetSpotsInRange(ctx context.Context, coordinate *domain.Geography, pq *utils.PaginationQuery) (*domain.SpotList, error)
 }
@@ -18,8 +19,8 @@ type spotRepo struct {
 	db *sqlx.DB
 }
 
-// News repository constructor
-func NewNewsRepository(db *sqlx.DB) SpotRepository {
+// NewSpotRepository is SpotRepository constructor
+func NewSpotRepository(db *sqlx.DB) SpotRepository {
 	return &spotRepo{db: db}
 }
 
@@ -29,9 +30,10 @@ func (sr *spotRepo) GetSpotsInRange(
 	query *utils.PaginationQuery) (*domain.SpotList, error) {
 
 	var totalCount int
-	if err := sr.db.GetContext(ctx, &totalCount, findTotalSpotsInRange,coordinate.Latitude,coordinate.Longitude, query.Range); err != nil {
+	if err := sr.db.GetContext(ctx, &totalCount, findTotalSpotsInRange, coordinate.Latitude, coordinate.Longitude, query.Range); err != nil {
 		return nil, errors.Wrap(err, "spotRepo.GetTotalSpotsInRange.GetContext")
 	}
+
 	if totalCount == 0 {
 		return &domain.SpotList{
 			TotalCount: totalCount,
@@ -39,16 +41,16 @@ func (sr *spotRepo) GetSpotsInRange(
 			Page:       query.GetPage(),
 			Size:       query.GetSize(),
 			HasMore:    utils.GetHasMore(query.GetPage(), totalCount, query.GetSize()),
-			Spots:       make([]*domain.Spot, 0),
+			Spots:      make([]*domain.Spot, 0),
 		}, nil
 	}
-
+		
 	var spotList = make([]*domain.Spot, 0, query.GetSize())
-	rows, err := sr.db.QueryxContext(ctx, findSpotsInRange, coordinate.Latitude,coordinate.Longitude, query.Range, query.GetOffset(), query.GetLimit())
+
+	rows, err := sr.db.QueryxContext(ctx, findSpotsInRange, coordinate.Latitude, coordinate.Longitude, query.Range, query.GetOffset(), query.GetLimit())
 	if err != nil {
 		return nil, errors.Wrap(err, "spotRepo.GetSpotsInRange.QueryxContext")
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		n := &domain.Spot{}

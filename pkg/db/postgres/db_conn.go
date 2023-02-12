@@ -17,14 +17,15 @@ import (
 )
 
 const (
-	maxOpenConns    = 60
+	maxOpenConns    = 30
 	connMaxLifetime = 120
 	maxIdleConns    = 30
 	connMaxIdleTime = 20
 )
 
-// Return new Postgresql db instance
+// NewPsqlDB returns new Postgresql db instance
 func NewPsqlDB(c *config.Config) (*sqlx.DB, error) {
+
 	dataSourceName := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s",
 		c.Postgres.PostgresqlHost,
 		c.Postgres.PostgresqlPort,
@@ -37,14 +38,17 @@ func NewPsqlDB(c *config.Config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	err = runMigrations(db.DB)
 	if err != nil {
 		return nil, err
 	}
+
 	db.SetMaxOpenConns(maxOpenConns)
 	db.SetConnMaxLifetime(connMaxLifetime * time.Second)
 	db.SetMaxIdleConns(maxIdleConns)
 	db.SetConnMaxIdleTime(connMaxIdleTime * time.Second)
+
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
@@ -52,19 +56,24 @@ func NewPsqlDB(c *config.Config) (*sqlx.DB, error) {
 	return db, nil
 }
 
-
 func runMigrations(db *sql.DB) error {
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	if err!= nil {
+	if err != nil {
 		return errors.Wrap(err, "migration")
 	}
-    m, err := migrate.NewWithDatabaseInstance(
-        "file:///migrations",
-        "postgres", driver)
-	if err!= nil {
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file:///migrations",
+		"postgres", driver)
+
+	if err != nil {
 		return errors.Wrap(err, "migration")
 	}
-    m.Up()
+
+	if err := m.Up(); err != migrate.ErrNoChange || err != nil {
+		return err
+	}
+
 	return nil
 }

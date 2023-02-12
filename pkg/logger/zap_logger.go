@@ -31,7 +31,7 @@ type apiLogger struct {
 	sugarLogger *zap.SugaredLogger
 }
 
-// App Logger constructor
+// NewApiLogger is a api logger constructor
 func NewApiLogger(cfg *config.Config) *apiLogger {
 	return &apiLogger{cfg: cfg}
 }
@@ -93,7 +93,6 @@ func (l *apiLogger) InitLogger() {
 }
 
 // Logger methods
-
 func (l *apiLogger) Debug(args ...interface{}) {
 	l.sugarLogger.Debug(args...)
 }

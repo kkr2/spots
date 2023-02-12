@@ -22,7 +22,7 @@ type spotService struct {
 	logger   logger.Logger
 }
 
-// Spots UseCase constructor
+// NewSpotsService Spots service constructor
 func NewSpotsService(cfg *config.Config, spotRepo repository.SpotRepository, logger logger.Logger) SpotService {
 	return &spotService{cfg: cfg, spotRepo: spotRepo, logger: logger}
 }
@@ -31,7 +31,7 @@ func (sps *spotService) GetSpotsInRangeOfCoordinate(
 	ctx context.Context,
 	coordinate *domain.Geography,
 	pq *utils.PaginationQuery) (*domain.SpotList, error) {
-	
+
 	if err := utils.ValidateStruct(ctx, coordinate); err != nil {
 		return nil, httpErrors.NewBadRequestError(errors.WithMessage(err, "spotService.GetSpotsInRangeOfCoordinate.ValidateCoordinate"))
 	}
@@ -41,7 +41,7 @@ func (sps *spotService) GetSpotsInRangeOfCoordinate(
 	if err != nil {
 		return nil, err
 	}
-	//TODO: if 2 spots less than 50m , order by rate
+	//TODO: If 2 spots less than 50m, order by rate.
 
 	return allSpots, nil
 

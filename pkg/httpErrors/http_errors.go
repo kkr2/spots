@@ -43,14 +43,14 @@ var (
 	NoCookie              = errors.New("not found cookie header")
 )
 
-// Rest error interface
+// RestErr is an interface for rest error methods
 type RestErr interface {
 	Status() int
 	Error() string
 	Causes() interface{}
 }
 
-// Rest error struct
+// RestError error struct
 type RestError struct {
 	ErrStatus int         `json:"status,omitempty"`
 	ErrError  string      `json:"error,omitempty"`
@@ -62,17 +62,17 @@ func (e RestError) Error() string {
 	return fmt.Sprintf("status: %d - errors: %s - causes: %v", e.ErrStatus, e.ErrError, e.ErrCauses)
 }
 
-// Error status
+// Status returns http error code
 func (e RestError) Status() int {
 	return e.ErrStatus
 }
 
-// RestError Causes
+// Causes returns the error couse
 func (e RestError) Causes() interface{} {
 	return e.ErrCauses
 }
 
-// New Rest Error
+// NewRestError constructs a new REST error
 func NewRestError(status int, err string, causes interface{}) RestErr {
 	return RestError{
 		ErrStatus: status,
@@ -81,7 +81,7 @@ func NewRestError(status int, err string, causes interface{}) RestErr {
 	}
 }
 
-// New Rest Error With Message
+// NewRestErrorWithMessage
 func NewRestErrorWithMessage(status int, err string, causes interface{}) RestErr {
 	return RestError{
 		ErrStatus: status,
@@ -90,7 +90,7 @@ func NewRestErrorWithMessage(status int, err string, causes interface{}) RestErr
 	}
 }
 
-// New Rest Error From Bytes
+// NewRestErrorFromBytes created RestErr from arr of bytes
 func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 	var apiErr RestError
 	if err := json.Unmarshal(bytes, &apiErr); err != nil {
@@ -99,7 +99,7 @@ func NewRestErrorFromBytes(bytes []byte) (RestErr, error) {
 	return apiErr, nil
 }
 
-// New Bad Request Error
+// NewBadRequestError returns a rest error providing the cause
 func NewBadRequestError(causes interface{}) RestErr {
 	return RestError{
 		ErrStatus: http.StatusBadRequest,
@@ -108,7 +108,7 @@ func NewBadRequestError(causes interface{}) RestErr {
 	}
 }
 
-// New Not Found Error
+// NewNotFoundError created not found rest err provided the cause
 func NewNotFoundError(causes interface{}) RestErr {
 	return RestError{
 		ErrStatus: http.StatusNotFound,
@@ -117,7 +117,7 @@ func NewNotFoundError(causes interface{}) RestErr {
 	}
 }
 
-// New Unauthorized Error
+// NewUnauthorizedError creates new rest unauthorized error provided the cause
 func NewUnauthorizedError(causes interface{}) RestErr {
 	return RestError{
 		ErrStatus: http.StatusUnauthorized,
@@ -126,7 +126,7 @@ func NewUnauthorizedError(causes interface{}) RestErr {
 	}
 }
 
-// New Forbidden Error
+// NewForbiddenError returns new forbidden rest error
 func NewForbiddenError(causes interface{}) RestErr {
 	return RestError{
 		ErrStatus: http.StatusForbidden,
@@ -135,7 +135,7 @@ func NewForbiddenError(causes interface{}) RestErr {
 	}
 }
 
-// New Internal Server Error
+// NewInternalServerError returns new internal rest error
 func NewInternalServerError(causes interface{}) RestErr {
 	result := RestError{
 		ErrStatus: http.StatusInternalServerError,
@@ -145,7 +145,7 @@ func NewInternalServerError(causes interface{}) RestErr {
 	return result
 }
 
-// Parser of error string messages returns RestError
+// ParseErrors decides what type of rest error is appropriate
 func ParseErrors(err error) RestErr {
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
@@ -153,7 +153,7 @@ func ParseErrors(err error) RestErr {
 	case errors.Is(err, context.DeadlineExceeded):
 		return NewRestError(http.StatusRequestTimeout, RequestTimeoutError.Error(), err)
 	case strings.Contains(err.Error(), "SQLSTATE"):
-		return parseSqlErrors(err)
+		return parseSQLErrors(err)
 	case strings.Contains(err.Error(), "Field validation"):
 		return parseValidatorError(err)
 	case strings.Contains(err.Error(), "Unmarshal"):
@@ -168,7 +168,7 @@ func ParseErrors(err error) RestErr {
 	}
 }
 
-func parseSqlErrors(err error) RestErr {
+func parseSQLErrors(err error) RestErr {
 	if strings.Contains(err.Error(), "23505") {
 		return NewRestError(http.StatusBadRequest, ExistsEmailError.Error(), err)
 	}
@@ -180,18 +180,10 @@ func parseSqlErrors(err error) RestErr {
 }
 
 func parseValidatorError(err error) RestErr {
-	// if strings.Contains(err.Error(), "Password") {
-	// 	return NewRestError(http.StatusBadRequest, "Invalid password, min length 6", err)
-	// }
-
-	// if strings.Contains(err.Error(), "Email") {
-	// 	return NewRestError(http.StatusBadRequest, "Invalid email", err)
-	// }
-
 	return NewRestError(http.StatusBadRequest, BadRequest.Error(), err)
 }
 
-// Error response
+// ErrorResponse returns rest status and type based on input err
 func ErrorResponse(err error) (int, interface{}) {
 	return ParseErrors(err).Status(), ParseErrors(err)
 }

@@ -1,7 +1,6 @@
 package repository
 
 const (
-
 	findTotalSpotsInRange = ` select count(s.id)
 								from  spots s
 								where st_intersects(ST_Transform( ST_MakeEnvelope(

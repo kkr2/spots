@@ -8,20 +8,20 @@ import (
 	"github.com/spf13/viper"
 )
 
-// App config struct
+// Config is all config struct
 type Config struct {
-	Server        ServerConfig
-	Postgres      PostgresConfig
-	Logger        Logger
+	Server   ServerConfig
+	Postgres PostgresConfig
+	Logger   Logger
 }
 
-// Server config struct
+// ServerConfig  struct
 type ServerConfig struct {
-	AppVersion        string
-	Port              string
-	Mode              string
-	ReadTimeout       time.Duration
-	WriteTimeout      time.Duration
+	AppVersion   string
+	Port         string
+	Mode         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
 	//SSL               bool
 	CtxDefaultTimeout time.Duration
 	Debug             bool
@@ -36,7 +36,7 @@ type Logger struct {
 	Level             string
 }
 
-// Postgresql config
+// PostgresConfig contains all postgres properties
 type PostgresConfig struct {
 	PostgresqlHost     string
 	PostgresqlPort     string
@@ -47,15 +47,26 @@ type PostgresConfig struct {
 	PgDriver           string
 }
 
+// ServerConfig  struct
+type AnotherServerConfing struct {
+	AppVersion   string
+	Port         string
+	Mode         string
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	CustomTimeout time.Duration
+	Debug             bool
+}
 
-// Load config file from given path
+
+// LoadConfig file from given path
 func LoadConfig(filename string) (*viper.Viper, error) {
 	v := viper.New()
 
 	v.SetConfigName(filename)
 	v.AddConfigPath(".")
-	v.AutomaticEnv()
-	if err := v.ReadInConfig(); err != nil {
+	v.AutomaticEnv ()
+	 if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			return nil, errors.New("config file not found")
 		}
@@ -65,7 +76,7 @@ func LoadConfig(filename string) (*viper.Viper, error) {
 	return v, nil
 }
 
-// Parse config file
+// ParseConfig is used to get confings from file
 func ParseConfig(v *viper.Viper) (*Config, error) {
 	var c Config
 
@@ -77,5 +88,3 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 
 	return &c, nil
 }
-
-

@@ -3,20 +3,19 @@ package utils
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 
-
 	"github.com/kkr2/spots/pkg/httpErrors"
 	"github.com/kkr2/spots/pkg/logger"
 	"github.com/kkr2/spots/pkg/sanitize"
 )
 
-// Get request id from echo context
+// GetRequestID gets id from echo context
 func GetRequestID(c echo.Context) string {
 	return c.Response().Header().Get(echo.HeaderXRequestID)
 }
@@ -24,19 +23,19 @@ func GetRequestID(c echo.Context) string {
 // ReqIDCtxKey is a key used for the Request ID in context
 type ReqIDCtxKey struct{}
 
-// Get ctx with timeout and request id from echo context
+// GetCtxWithReqID timeout and request id from echo context
 func GetCtxWithReqID(c echo.Context) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(c.Request().Context(), time.Second*15)
 	ctx = context.WithValue(ctx, ReqIDCtxKey{}, GetRequestID(c))
 	return ctx, cancel
 }
 
-// Get context  with request id
+// GetRequestCtx gets context from request
 func GetRequestCtx(c echo.Context) context.Context {
 	return context.WithValue(c.Request().Context(), ReqIDCtxKey{}, GetRequestID(c))
 }
 
-// Get config path for local or docker
+// GetConfigPath gets path for local or docker
 func GetConfigPath(configPath string) string {
 	if configPath == "docker" {
 		return "./config-docker"
@@ -44,13 +43,12 @@ func GetConfigPath(configPath string) string {
 	return "./internal/config/config-local"
 }
 
-
-// Get user ip address
+// GetIPAddress gets user ip address
 func GetIPAddress(c echo.Context) string {
 	return c.Request().RemoteAddr
 }
 
-// Error response with logging error for echo context
+// ErrResponseWithLog response with logging error for echo context
 func ErrResponseWithLog(ctx echo.Context, logger logger.Logger, err error) error {
 	logger.Errorf(
 		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %s",
@@ -61,7 +59,7 @@ func ErrResponseWithLog(ctx echo.Context, logger logger.Logger, err error) error
 	return ctx.JSON(httpErrors.ErrorResponse(err))
 }
 
-// Error response with logging error for echo context
+// LogResponseError response with logging error for echo context
 func LogResponseError(ctx echo.Context, logger logger.Logger, err error) {
 	logger.Errorf(
 		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %s",
@@ -71,7 +69,7 @@ func LogResponseError(ctx echo.Context, logger logger.Logger, err error) {
 	)
 }
 
-// Read request body and validate
+// ReadRequest request body and validate
 func ReadRequest(ctx echo.Context, request interface{}) error {
 	if err := ctx.Bind(request); err != nil {
 		return err
@@ -79,11 +77,9 @@ func ReadRequest(ctx echo.Context, request interface{}) error {
 	return validate.StructCtx(ctx.Request().Context(), request)
 }
 
-
-
-// Read sanitize and validate request
+// SanitizeRequest sanitize and validate request
 func SanitizeRequest(ctx echo.Context, request interface{}) error {
-	body, err := ioutil.ReadAll(ctx.Request().Body)
+	body, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		return err
 	}
@@ -100,4 +96,3 @@ func SanitizeRequest(ctx echo.Context, request interface{}) error {
 
 	return validate.StructCtx(ctx.Request().Context(), request)
 }
-
