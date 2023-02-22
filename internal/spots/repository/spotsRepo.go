@@ -14,16 +14,17 @@ type SpotRepository interface {
 	GetSpotsInRange(ctx context.Context, coordinate *domain.Geography, pq *utils.PaginationQuery) (*domain.SpotList, error)
 }
 
-// News Repository
+// Spots Repository implementation 
 type spotRepo struct {
 	db *sqlx.DB
 }
 
-// NewSpotRepository is SpotRepository constructor
+// NewSpotRepository initiates new repository of spots 
 func NewSpotRepository(db *sqlx.DB) SpotRepository {
 	return &spotRepo{db: db}
 }
 
+// GetSpotsInRange returns all geo spots in the given range of the coordinate 
 func (sr *spotRepo) GetSpotsInRange(
 	ctx context.Context,
 	coordinate *domain.Geography,
@@ -31,7 +32,7 @@ func (sr *spotRepo) GetSpotsInRange(
 
 	var totalCount int
 	if err := sr.db.GetContext(ctx, &totalCount, findTotalSpotsInRange, coordinate.Latitude, coordinate.Longitude, query.Range); err != nil {
-		return nil, errors.Wrap(err, "spotRepo.GetTotalSpotsInRange.GetContext")
+		return nil, errors.Wrap(err, "spotsRepo.GetTotalSpotsInRange.GetContext")
 	}
 
 	if totalCount == 0 {
@@ -49,19 +50,19 @@ func (sr *spotRepo) GetSpotsInRange(
 
 	rows, err := sr.db.QueryxContext(ctx, findSpotsInRange, coordinate.Latitude, coordinate.Longitude, query.Range, query.GetOffset(), query.GetLimit())
 	if err != nil {
-		return nil, errors.Wrap(err, "spotRepo.GetSpotsInRange.QueryxContext")
+		return nil, errors.Wrap(err, "spotsRepo.GetSpotsInRange.QueryxContext")
 	}
 
 	for rows.Next() {
 		n := &domain.Spot{}
 		if err = rows.StructScan(n); err != nil {
-			return nil, errors.Wrap(err, "newsRepo.GetSpotsInRange.StructScan")
+			return nil, errors.Wrap(err, "spotsRepo.GetSpotsInRange.StructScan")
 		}
 		spotList = append(spotList, n)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, errors.Wrap(err, "newsRepo.GetSpotsInRange.rows.Err")
+		return nil, errors.Wrap(err, "spotsRepo.GetSpotsInRange.rows.Err")
 	}
 
 	return &domain.SpotList{

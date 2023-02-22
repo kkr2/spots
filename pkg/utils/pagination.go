@@ -124,7 +124,7 @@ func GetTotalPages(totalCount int, pageSize int) int {
 	return int(math.Ceil(d))
 }
 
-// Get has more
+// GetHasMore returns if db has more data 
 func GetHasMore(currentPage int, totalCount int, pageSize int) bool {
 	return currentPage < totalCount/pageSize
 }
